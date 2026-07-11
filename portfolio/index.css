@@ -1,0 +1,44 @@
+:root {
+  --bg: #0d0d0d;
+  --bg2: #111111;
+  --text: #f0ede8;
+  --text-dim: rgba(240,237,232,0.45);
+  --text-mid: rgba(240,237,232,0.7);
+  --accent: #c8ff57;
+  --border: rgba(240,237,232,0.1);
+  --border2: rgba(240,237,232,0.2);
+}
+ 
+html { scroll-behavior: smooth; }
+ 
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+  -webkit-font-smoothing: antialiased;
+}
+/* CUSTOM CURSOR */
+.cursor {
+  width: 10px; height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform .1s, width .3s, height .3s, background .3s;
+  mix-blend-mode: difference;
+}
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1px solid rgba(200,255,87,0.5);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: left .12s ease, top .12s ease;
+}
+.cursor.hovered { width: 20px; height: 20px; }
