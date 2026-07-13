@@ -1,44 +1,114 @@
-:root {
-  --bg: #0d0d0d;
-  --bg2: #111111;
-  --text: #f0ede8;
-  --text-dim: rgba(240,237,232,0.45);
-  --text-mid: rgba(240,237,232,0.7);
-  --accent: #c8ff57;
-  --border: rgba(240,237,232,0.1);
-  --border2: rgba(240,237,232,0.2);
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:100%; height:100%; overflow:hidden; background:#161616; cursor:none; -webkit-font-smoothing:antialiased; }
+ 
+/* smooth site-open transition */
+body { opacity:0; }
+body.is-ready {
+  opacity:1;
+  transition: opacity 0.9s ease;
 }
  
-html { scroll-behavior: smooth; }
+/* CURSOR DOT */
+.cur { position:fixed; z-index:9999; pointer-events:none; width:10px; height:10px; border-radius:50%; background:#fff; transform:translate(-50%,-50%); }
  
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  overflow-x: hidden;
-  cursor: none;
-  -webkit-font-smoothing: antialiased;
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; z-index:300; display:grid; grid-template-columns:56px 1fr 130px; align-items:flex-start; padding:26px 36px 0; }
+.nav-logo { width:45px; height:45px; border-radius:50%; object-fit:cover; margin-left: 20px; margin-top: 30px; }
+.nav-links { list-style:none; text-align:right; display:flex; flex-direction:column; gap:1px; margin-right: 20px; margin-top: 30px; }
+.nav-links a { font-family:'Barlow',sans-serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#a69785; text-decoration:none; transition:color .2s; cursor:none; font-weight:500; }
+.nav-links a:hover { color:#a69785; }
+
+/* SIDEBARS */
+.s-left { position:fixed; left:70px; top:84%; transform:translateY(-50%); z-index:300; display:flex; flex-direction:column; gap:22px; }
+.s-icon { opacity:.35; display:flex; align-items:center; transition:opacity .2s; cursor:none; text-decoration:none; }
+.s-icon:hover { opacity:1; }
+.s-icon svg { width:20px; height:20px; fill:none; stroke:#a69785; stroke-width:1.6; }
+
+
+ 
+/* AVAILABLE */
+.avail { position:fixed; bottom:36px; right:56px; z-index:300; display:flex; align-items:center; gap:8px; font-family:'Barlow',sans-serif; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:rgba(216,210,196,.45); }
+.avail-dot { width:7px; height:7px; border-radius:50%; background:#e8513a; animation:blink 1.6s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.15} }
+ 
+/* HERO */
+#hero { width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+#hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 80% at 50% 50%,#1c1c1c 0%,#0d0d0d 100%); }
+ 
+/* THE TWO TEXT LAYERS */
+.text-layer {
+  position:absolute; z-index:10;
+  display:flex; flex-direction:column;
+  align-items:center; text-align:center;
+  user-select:none; pointer-events:none;
+  top:50%; left:50%; transform:translate(-50%,-50%);
+  width:100%;
 }
-/* CUSTOM CURSOR */
-.cursor {
-  width: 10px; height: 10px;
-  background: var(--accent);
-  border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  pointer-events: none; z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: transform .1s, width .3s, height .3s, background .3s;
-  mix-blend-mode: difference;
+ 
+.name-lbl {
+  font-family:'Barlow',sans-serif;
+  font-size:clamp(11px,1.1vw,14px);
+  letter-spacing:.28em; text-transform:uppercase; font-weight:500;
+  margin-bottom:clamp(10px,1.8vw,22px);
+  line-height:1;
 }
-.cursor-ring {
-  width: 36px; height: 36px;
-  border: 1px solid rgba(200,255,87,0.5);
-  border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  pointer-events: none; z-index: 9998;
-  transform: translate(-50%, -50%);
-  transition: left .12s ease, top .12s ease;
+ 
+.hl {
+  display:block;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(64px, 11vw, 200px);
+  font-weight:900; text-transform:uppercase;
+  letter-spacing:-0.02em; line-height:.88;
+  white-space:nowrap;
 }
-.cursor.hovered { width: 20px; height: 20px; }
+ 
+/* laptop-range guard: 11vw runs large again once viewport width
+   climbs past ~1440px on typical laptop screens, so cap it explicitly */
+@media (min-width: 1024px) and (max-width: 1600px) {
+  .hl { font-size: clamp(64px, 9vw, 150px); }
+}
+ 
+.layer-a { z-index:10; }
+.layer-a .name-lbl { color:#a69785; }
+.layer-a .hl-cream  { color:#a69785; }
+.layer-a .hl-red    { color:#e8513a; }
+ 
+.layer-b {
+  z-index:20;
+  clip-path: circle(0px at 50% 50%);
+  transition: none;
+}
+.layer-b .name-lbl { color:#111; }
+.layer-b .hl-cream  { color:#111; }
+.layer-b .hl-red    { color:#111; }
+ 
+.red-bg {
+  position:absolute; z-index:15; pointer-events:none;
+  width:80px; height:80px; border-radius:50%;
+  background:#e8513a;
+  top:0; left:0;
+  transform:translate(-50%,-50%);
+  transition:none;
+  opacity:0;
+}
+ 
+@keyframes fadeUp { from{opacity:0;transform:translate(-50%,-50%) translateY(28px)} to{opacity:1;transform:translate(-50%,-50%) translateY(0)} }
+.text-layer { animation:fadeUp .8s .2s ease both; }
+ 
+@keyframes riseIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+ 
+nav, .avail { opacity:0; animation:riseIn .7s ease both; }
+nav { animation-delay:.15s; }
+.avail { animation-delay:.4s; }
+ 
+/* s-left / s-right already carry translateY(-50%) for centering,
+   so fade opacity only — animating transform would override that */
+.s-left, .s-right { opacity:0; animation:fadeIn .7s ease both; }
+.s-left { animation-delay:.3s; }
+.s-right { animation-delay:.3s; }
+ 
+@media (prefers-reduced-motion: reduce) {
+  body, body.is-ready { transition:none; }
+  .text-layer, nav, .s-left, .s-right, .avail { animation:none; opacity:1; }
+}

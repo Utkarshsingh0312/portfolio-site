@@ -25,8 +25,9 @@ body.fade-out {
 /* Logo sizing */
 .logo {
     width: 60px; 
-    height: auto;
+    height: 60px;
     border-radius: 50%; 
+    object-fit: cover; 
 }
 
 .start-btn {
@@ -75,3 +76,4 @@ body.fade-out {
         letter-spacing: 4px; 
     }
 }
+
