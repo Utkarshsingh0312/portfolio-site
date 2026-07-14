@@ -1,30 +1,70 @@
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 html, body { width:100%; height:100%; overflow:hidden; background:#161616; cursor:none; -webkit-font-smoothing:antialiased; }
- 
-/* smooth site-open transition */
 body { opacity:0; }
-body.is-ready {
-  opacity:1;
-  transition: opacity 0.9s ease;
-}
+body.is-ready { opacity:1; transition:opacity 0.9s ease; }
  
-/* CURSOR DOT */
 .cur { position:fixed; z-index:9999; pointer-events:none; width:10px; height:10px; border-radius:50%; background:#fff; transform:translate(-50%,-50%); }
  
-/* NAV */
-nav { position:fixed; top:0; left:0; right:0; z-index:300; display:grid; grid-template-columns:56px 1fr 130px; align-items:flex-start; padding:26px 36px 0; }
-.nav-logo { width:45px; height:45px; border-radius:50%; object-fit:cover; margin-left: 20px; margin-top: 30px; }
-.nav-links { list-style:none; text-align:right; display:flex; flex-direction:column; gap:1px; margin-right: 20px; margin-top: 30px; }
-.nav-links a { font-family:'Barlow',sans-serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#a69785; text-decoration:none; transition:color .2s; cursor:none; font-weight:500; }
-.nav-links a:hover { color:#a69785; }
-
-/* SIDEBARS */
-.s-left { position:fixed; left:70px; top:84%; transform:translateY(-50%); z-index:300; display:flex; flex-direction:column; gap:22px; }
-.s-icon { opacity:.35; display:flex; align-items:center; transition:opacity .2s; cursor:none; text-decoration:none; }
-.s-icon:hover { opacity:1; }
-.s-icon svg { width:20px; height:20px; fill:none; stroke:#a69785; stroke-width:1.6; }
-
-
+/* Constant-size red dot that follows the cursor — only visible near an icon, never scales/grows */
+.cur-icon { position:fixed; z-index:9997; pointer-events:none; width:30px; height:30px; border-radius:50%; background:#e8513a; transform:translate(-50%,-50%); opacity:0; transition:opacity .2s ease; }
+.cur-icon.show { opacity:0; }
+ 
+nav { position:fixed; top:0; left:0; right:0; z-index:400; display:grid; grid-template-columns:56px 1fr 130px; align-items:flex-start; padding:26px 36px 0; }
+.nav-logo { margin-left:20px; margin-top:30px; }
+.nav-logo.s-icon { width:45px; height:45px; }
+.nav-links { list-style:none; text-align:right; display:flex; flex-direction:column; gap:1px; margin-right:20px; margin-top:30px; }
+.nav-links a { font-family:'Barlow',sans-serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#a69785; text-decoration:none; cursor:none; font-weight:500; }
+ 
+/* ── SIDEBAR ── */
+.s-left {
+  position:fixed; left:70px; top:84%;
+  transform:translateY(-50%);
+  z-index:302;
+  display:flex; flex-direction:column; gap:28px;
+}
+ 
+/* Each icon wrapper — holds the red bg + the svg */
+.s-icon {
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  width:24px; height:24px;
+  cursor:none; text-decoration:none;
+  /* will-change for smooth GPU transform */
+  will-change:transform;
+}
+ 
+/* SVG sits above the cursor's red dot */
+.s-icon svg {
+  position:relative; z-index:1;
+  width:22px; height:22px;
+  fill:none; stroke:#a69785; stroke-width:1.6;
+  transition:stroke .25s ease;
+}
+.s-icon.active svg { stroke:#1a1a1a; }
+ 
+/* Image logo icon — references a real file in /assets, so swapping that file
+   is all that's needed to change the logo; no code changes required.
+   .logo-circle is a plain solid circle (no image needed, it's always one flat color).
+   .logo-shape is masked by assets/logo-shape.png — a transparent-background PNG
+   where the opaque part is your artwork's silhouette. Replace that file with your
+   own (transparent bg, solid-filled shape) and every animation/effect below keeps working. */
+.logo-circle, .logo-shape {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  transition:background-color .25s ease;
+}
+.logo-circle { background:#a69785; border-radius:50%; z-index:0; }
+.logo-shape  {
+  background:#111; z-index:1;
+  -webkit-mask-image:url('images/logo-shape.png');
+  mask-image:url('images/logo-shape.png');
+  -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:center; mask-position:center;
+}
+.s-icon-image { border-radius:50%; overflow:hidden; }
+.s-icon.active .logo-circle { background:#111; }
+.s-icon.active .logo-shape  { background:#e8513a; }
  
 /* AVAILABLE */
 .avail { position:fixed; bottom:36px; right:56px; z-index:300; display:flex; align-items:center; gap:8px; font-family:'Barlow',sans-serif; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:rgba(216,210,196,.45); }
@@ -35,80 +75,27 @@ nav { position:fixed; top:0; left:0; right:0; z-index:300; display:grid; grid-te
 #hero { width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
 #hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 80% at 50% 50%,#1c1c1c 0%,#0d0d0d 100%); }
  
-/* THE TWO TEXT LAYERS */
-.text-layer {
-  position:absolute; z-index:10;
-  display:flex; flex-direction:column;
-  align-items:center; text-align:center;
-  user-select:none; pointer-events:none;
-  top:50%; left:50%; transform:translate(-50%,-50%);
-  width:100%;
-}
- 
-.name-lbl {
-  font-family:'Barlow',sans-serif;
-  font-size:clamp(11px,1.1vw,14px);
-  letter-spacing:.28em; text-transform:uppercase; font-weight:500;
-  margin-bottom:clamp(10px,1.8vw,22px);
-  line-height:1;
-}
- 
-.hl {
-  display:block;
-  font-family:'Barlow Condensed',sans-serif;
-  font-size:clamp(64px, 11vw, 200px);
-  font-weight:900; text-transform:uppercase;
-  letter-spacing:-0.02em; line-height:.88;
-  white-space:nowrap;
-}
- 
-/* laptop-range guard: 11vw runs large again once viewport width
-   climbs past ~1440px on typical laptop screens, so cap it explicitly */
-@media (min-width: 1024px) and (max-width: 1600px) {
-  .hl { font-size: clamp(64px, 9vw, 150px); }
-}
+.text-layer { position:absolute; z-index:10; display:flex; flex-direction:column; align-items:center; text-align:center; user-select:none; pointer-events:none; top:50%; left:50%; transform:translate(-50%,-50%); width:100%; }
+.name-lbl { font-family:'Barlow',sans-serif; font-size:clamp(11px,1.1vw,14px); letter-spacing:.28em; text-transform:uppercase; font-weight:500; margin-bottom:clamp(10px,1.8vw,22px); line-height:1; }
+.hl { display:block; font-family:'Barlow Condensed',sans-serif; font-size:clamp(64px,9vw,150px); font-weight:900; text-transform:uppercase; letter-spacing:-0.02em; line-height:.88; white-space:nowrap; }
  
 .layer-a { z-index:10; }
 .layer-a .name-lbl { color:#a69785; }
-.layer-a .hl-cream  { color:#a69785; }
-.layer-a .hl-red    { color:#e8513a; }
+.layer-a .hl-cream { color:#a69785; }
+.layer-a .hl-red   { color:#e8513a; }
  
-.layer-b {
-  z-index:20;
-  clip-path: circle(0px at 50% 50%);
-  transition: none;
-}
+.layer-b { z-index:20; clip-path:circle(0px at 50% 50%); }
 .layer-b .name-lbl { color:#111; }
-.layer-b .hl-cream  { color:#111; }
-.layer-b .hl-red    { color:#111; }
+.layer-b .hl-cream { color:#111; }
+.layer-b .hl-red   { color:#111; }
  
-.red-bg {
-  position:absolute; z-index:15; pointer-events:none;
-  width:80px; height:80px; border-radius:50%;
-  background:#e8513a;
-  top:0; left:0;
-  transform:translate(-50%,-50%);
-  transition:none;
-  opacity:0;
-}
+.red-bg { position:absolute; z-index:15; pointer-events:none; width:40px; height:40px; border-radius:50%; background:#e8513a; top:0; left:0; transform:translate(-50%,-50%); opacity:0; }
  
+/* LOAD ANIMS */
 @keyframes fadeUp { from{opacity:0;transform:translate(-50%,-50%) translateY(28px)} to{opacity:1;transform:translate(-50%,-50%) translateY(0)} }
 .text-layer { animation:fadeUp .8s .2s ease both; }
- 
 @keyframes riseIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
- 
-nav, .avail { opacity:0; animation:riseIn .7s ease both; }
-nav { animation-delay:.15s; }
-.avail { animation-delay:.4s; }
- 
-/* s-left / s-right already carry translateY(-50%) for centering,
-   so fade opacity only — animating transform would override that */
-.s-left, .s-right { opacity:0; animation:fadeIn .7s ease both; }
-.s-left { animation-delay:.3s; }
-.s-right { animation-delay:.3s; }
- 
-@media (prefers-reduced-motion: reduce) {
-  body, body.is-ready { transition:none; }
-  .text-layer, nav, .s-left, .s-right, .avail { animation:none; opacity:1; }
-}
+nav,.avail { opacity:0; animation:riseIn .7s ease both; }
+nav { animation-delay:.15s; } .avail { animation-delay:.4s; }
+.s-left { opacity:0; animation:fadeIn .7s .3s ease both; }
