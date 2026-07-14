@@ -4,76 +4,86 @@ document.addEventListener('DOMContentLoaded', () => {
  
 const cur    = document.getElementById('cur');
 const curIcon = document.getElementById('curIcon');
-const redBg  = document.getElementById('redBg');
-const layerB = document.getElementById('layerB');
  
 let mx = -9999, my = -9999;
 let visible = false;
+ 
+const R_SMALL = 20, R_BIG = 180;
+ 
+const reveals = [
+  {
+    root: document.getElementById('hero'),
+    textEls: () => document.querySelectorAll('#layerA .hl, #layerA .name-lbl'),
+    layerB: document.getElementById('layerB'),
+    redBg: document.getElementById('redBg'),
+    cx: 0, cy: 0, currentR: R_SMALL, targetR: R_SMALL
+  },
+  {
+    root: document.getElementById('about'),
+    textEls: () => document.querySelectorAll('#aboutA .about-ln, #aboutA .name-lbl'),
+    layerB: document.getElementById('aboutB'),
+    redBg: document.getElementById('redBg2'),
+    cx: 0, cy: 0, currentR: R_SMALL, targetR: R_SMALL
+  }
+];
  
 document.addEventListener('mousemove', e => {
   mx = e.clientX; my = e.clientY;
   cur.style.left = mx + 'px'; cur.style.top = my + 'px';
   if (!visible) {
     visible = true;
-    redBg.style.opacity = '1';
-    // snap all trailing positions straight to the cursor so nothing
-    // animates in from the off-screen init position
-    cx = mx; cy = my;
     icx = mx; icy = my;
+    reveals.forEach(rv => { rv.cx = mx; rv.cy = my; });
   }
 });
  
-// ── TEXT REVEAL CIRCLE ──
-const R_SMALL = 20, R_BIG = 180;
-let cx = mx, cy = my, currentR = R_SMALL, targetR = R_SMALL;
- 
-function getTextRects() {
-  return [...document.querySelectorAll('#layerA .hl, #layerA .name-lbl')]
-    .map(el => el.getBoundingClientRect());
-}
- 
-// ── MAGNETIC ICONS ──
-// Each icon: track its own offset (tx, ty) from origin
 const iconEls = [document.getElementById('icon0'), document.getElementById('icon1'), document.getElementById('navLogo')];
-const MAGNET_DIST   = 80;  // attract radius
-const MAGNET_STRENGTH = 0.4; // how much it follows (0-1)
+const MAGNET_DIST   = 80;
+const MAGNET_STRENGTH = 0.4;
  
-// per-icon state
 const iconState = iconEls.map(() => ({
-  ox: 0, oy: 0,   // current offset
-  tx: 0, ty: 0,   // target offset
+  ox: 0, oy: 0,
+  tx: 0, ty: 0,
   active: false
 }));
  
-// smooth trailing position for the red dot (slight delay behind the real cursor)
 let icx = mx, icy = my;
  
 (function loop() {
-  // smooth trailing follow for the red icon-dot — slight delay, feels the same on any screen size
   icx += (mx - icx) * 0.15;
   icy += (my - icy) * 0.15;
   curIcon.style.left = icx + 'px';
   curIcon.style.top  = icy + 'px';
  
-  // ── 1. Text reveal ──
-  cx += (mx - cx) * 0.1;
-  cy += (my - cy) * 0.1;
-  let nearText = false;
-  for (const r of getTextRects()) {
-    const nearX = Math.max(r.left, Math.min(mx, r.right));
-    const nearY = Math.max(r.top,  Math.min(my, r.bottom));
-    if (Math.hypot(mx - nearX, my - nearY) < 80) { nearText = true; break; }
-  }
-  targetR = nearText ? R_BIG : R_SMALL;
-  currentR += (targetR - currentR) * 0.08;
-  const d = currentR * 2;
-  redBg.style.width = d + 'px'; redBg.style.height = d + 'px';
-  redBg.style.left = cx + 'px'; redBg.style.top = cy + 'px';
-  const lbRect = layerB.getBoundingClientRect();
-  layerB.style.clipPath = `circle(${currentR}px at ${cx - lbRect.left}px ${cy - lbRect.top}px)`;
+  reveals.forEach(rv => {
+    const rect = rv.root.getBoundingClientRect();
+    const inSection = my >= rect.top && my <= rect.bottom;
  
-  // ── 2. Magnetic icon pull ──
-  // find distances first, then only let the single nearest icon (within range) activate
+    rv.cx += (mx - rv.cx) * 0.1;
+    rv.cy += (my - rv.cy) * 0.1;
+ 
+    let nearText = false;
+    if (inSection) {
+      for (const el of rv.textEls()) {
+        const r = el.getBoundingClientRect();
+        const nearX = Math.max(r.left, Math.min(mx, r.right));
+        const nearY = Math.max(r.top,  Math.min(my, r.bottom));
+        if (Math.hypot(mx - nearX, my - nearY) < 80) { nearText = true; break; }
+      }
+    }
+ 
+    rv.targetR = nearText ? R_BIG : R_SMALL;
+    rv.currentR += (rv.targetR - rv.currentR) * 0.08;
+ 
+    const d = rv.currentR * 2;
+    rv.redBg.style.width = d + 'px'; rv.redBg.style.height = d + 'px';
+    rv.redBg.style.left = rv.cx + 'px'; rv.redBg.style.top = rv.cy + 'px';
+    rv.redBg.style.opacity = inSection ? '1' : '0';
+ 
+    const lbRect = rv.layerB.getBoundingClientRect();
+    rv.layerB.style.clipPath = `circle(${rv.currentR}px at ${rv.cx - lbRect.left}px ${rv.cy - lbRect.top}px)`;
+  });
+ 
   let nearestIdx = -1, nearestDist = Infinity;
   const dists = iconEls.map((el, i) => {
     const st = iconState[i];
@@ -92,7 +102,6 @@ let icx = mx, icy = my;
     const { ecx, ecy } = dists[i];
  
     if (i === nearestIdx) {
-      // pull icon toward cursor
       st.tx = (mx - ecx) * MAGNET_STRENGTH;
       st.ty = (my - ecy) * MAGNET_STRENGTH;
       if (!st.active) {
@@ -101,7 +110,6 @@ let icx = mx, icy = my;
       }
       anyIconActive = true;
     } else {
-      // spring back to origin
       st.tx = 0;
       st.ty = 0;
       if (st.active) {
@@ -110,15 +118,12 @@ let icx = mx, icy = my;
       }
     }
  
-    // lerp offset
     st.ox += (st.tx - st.ox) * 0.12;
     st.oy += (st.ty - st.oy) * 0.12;
  
-    // apply transform
     el.style.transform = `translate(${st.ox}px, ${st.oy}px)`;
   }
  
-  // the red dot fades in near an icon; the regular cursor stays visible underneath it
   curIcon.classList.toggle('show', anyIconActive);
  
   requestAnimationFrame(loop);
