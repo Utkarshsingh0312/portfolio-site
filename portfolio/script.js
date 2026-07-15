@@ -10,6 +10,7 @@ let visible = false;
  
 const R_SMALL = 20, R_BIG = 180;
  
+/* hero and about both use the cursor-driven circle reveal */
 const reveals = [
   {
     root: document.getElementById('hero'),
@@ -20,7 +21,7 @@ const reveals = [
   },
   {
     root: document.getElementById('about'),
-    textEls: () => document.querySelectorAll('#aboutA .about-ln, #aboutA .name-lbl'),
+    textEls: () => document.querySelectorAll('#aboutA .word, .about-wrap .name-lbl'),
     layerB: document.getElementById('aboutB'),
     redBg: document.getElementById('redBg2'),
     cx: 0, cy: 0, currentR: R_SMALL, targetR: R_SMALL
@@ -128,3 +129,70 @@ let icx = mx, icy = my;
  
   requestAnimationFrame(loop);
 })();
+ 
+/* ── scroll word-reveal shadow effect (About section) ── */
+function wrapWords(container) {
+  const accentEls = new Set(container.querySelectorAll('[data-accent]'));
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  let n;
+  while ((n = walker.nextNode())) textNodes.push(n);
+ 
+  const STEP_MS = 18;   // delay added per word
+  const MAX_MS  = 220;  // cap so long paragraphs don't get a long tail
+  let wordIndex = 0;
+ 
+  textNodes.forEach(node => {
+    const isAccent = accentEls.has(node.parentElement);
+    const parts = node.textContent.split(/(\s+)/);
+    const frag = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (part.trim() === '') {
+        frag.appendChild(document.createTextNode(part));
+      } else {
+        const span = document.createElement('span');
+        span.className = 'word' + (isAccent ? ' accent' : '');
+        span.textContent = part;
+        const delay = Math.min(wordIndex * STEP_MS, MAX_MS);
+        span.style.setProperty('--word-delay', delay + 'ms');
+        wordIndex++;
+        frag.appendChild(span);
+      }
+    });
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+ 
+document.querySelectorAll('[data-reveal]').forEach(wrapWords);
+const revealParas = Array.from(document.querySelectorAll('[data-reveal]')).map(p => ({
+  el: p,
+  words: p.querySelectorAll('.word'),
+  smoothed: 0
+}));
+ 
+// reveal starts when the paragraph enters the bottom of the viewport,
+// and finishes once it's scrolled up to REVEAL_END_FRACTION of the viewport height
+// (measured from the top) -- always reachable, even on the last section.
+const REVEAL_END_FRACTION = 0.5;
+const REVEAL_SMOOTHING = 0.08; // lower = smoother/slower catch-up, higher = snappier
+ 
+function revealLoop() {
+  const vh = window.innerHeight;
+ 
+  revealParas.forEach(para => {
+    const r = para.el.getBoundingClientRect();
+    const start = vh;
+    const end   = vh * REVEAL_END_FRACTION;
+    let target = (start - r.top) / (start - end);
+    target = Math.max(0, Math.min(1, target));
+ 
+    para.smoothed += (target - para.smoothed) * REVEAL_SMOOTHING;
+    if (Math.abs(target - para.smoothed) < 0.0005) para.smoothed = target;
+ 
+    const revealCount = para.smoothed * para.words.length;
+    para.words.forEach((w, i) => w.classList.toggle('lit', i < revealCount));
+  });
+ 
+  requestAnimationFrame(revealLoop);
+}
+requestAnimationFrame(revealLoop);
