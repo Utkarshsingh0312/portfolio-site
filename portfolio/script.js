@@ -10,7 +10,6 @@ let visible = false;
  
 const R_SMALL = 20, R_BIG = 180;
  
-/* hero and about both use the cursor-driven circle reveal */
 const reveals = [
   {
     root: document.getElementById('hero'),
@@ -21,12 +20,14 @@ const reveals = [
   },
   {
     root: document.getElementById('about'),
-    textEls: () => document.querySelectorAll('#aboutA .word, .about-wrap .name-lbl'),
+    textEls: () => document.querySelectorAll('#aboutA .about-ln, .about-wrap .name-lbl'),
     layerB: document.getElementById('aboutB'),
     redBg: document.getElementById('redBg2'),
     cx: 0, cy: 0, currentR: R_SMALL, targetR: R_SMALL
   }
 ];
+ 
+let icx = mx, icy = my;
  
 document.addEventListener('mousemove', e => {
   mx = e.clientX; my = e.clientY;
@@ -48,11 +49,9 @@ const iconState = iconEls.map(() => ({
   active: false
 }));
  
-let icx = mx, icy = my;
- 
 (function loop() {
-  icx += (mx - icx) * 0.15;
-  icy += (my - icy) * 0.15;
+  icx += (mx - icx) * 0.1;
+  icy += (my - icy) * 0.1;
   curIcon.style.left = icx + 'px';
   curIcon.style.top  = icy + 'px';
  
@@ -60,8 +59,8 @@ let icx = mx, icy = my;
     const rect = rv.root.getBoundingClientRect();
     const inSection = my >= rect.top && my <= rect.bottom;
  
-    rv.cx += (mx - rv.cx) * 0.1;
-    rv.cy += (my - rv.cy) * 0.1;
+    rv.cx += (mx - rv.cx) * 0.07;
+    rv.cy += (my - rv.cy) * 0.07;
  
     let nearText = false;
     if (inSection) {
@@ -74,7 +73,7 @@ let icx = mx, icy = my;
     }
  
     rv.targetR = nearText ? R_BIG : R_SMALL;
-    rv.currentR += (rv.targetR - rv.currentR) * 0.08;
+    rv.currentR += (rv.targetR - rv.currentR) * 0.06;
  
     const d = rv.currentR * 2;
     rv.redBg.style.width = d + 'px'; rv.redBg.style.height = d + 'px';
@@ -119,8 +118,8 @@ let icx = mx, icy = my;
       }
     }
  
-    st.ox += (st.tx - st.ox) * 0.12;
-    st.oy += (st.ty - st.oy) * 0.12;
+    st.ox += (st.tx - st.ox) * 0.1;
+    st.oy += (st.ty - st.oy) * 0.1;
  
     el.style.transform = `translate(${st.ox}px, ${st.oy}px)`;
   }
@@ -130,16 +129,15 @@ let icx = mx, icy = my;
   requestAnimationFrame(loop);
 })();
  
-/* ── scroll word-reveal shadow effect (About section) ── */
 function wrapWords(container) {
-  const accentEls = new Set(container.querySelectorAll('[data-accent]'));
+  const accentEls = new Set(container.querySelectorAll('.hl-red-inline'));
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   const textNodes = [];
   let n;
   while ((n = walker.nextNode())) textNodes.push(n);
  
-  const STEP_MS = 18;   // delay added per word
-  const MAX_MS  = 220;  // cap so long paragraphs don't get a long tail
+  const STEP_MS = 28;
+  const MAX_MS  = 320;
   let wordIndex = 0;
  
   textNodes.forEach(node => {
@@ -170,11 +168,8 @@ const revealParas = Array.from(document.querySelectorAll('[data-reveal]')).map(p
   smoothed: 0
 }));
  
-// reveal starts when the paragraph enters the bottom of the viewport,
-// and finishes once it's scrolled up to REVEAL_END_FRACTION of the viewport height
-// (measured from the top) -- always reachable, even on the last section.
 const REVEAL_END_FRACTION = 0.5;
-const REVEAL_SMOOTHING = 0.08; // lower = smoother/slower catch-up, higher = snappier
+const REVEAL_SMOOTHING = 0.05;
  
 function revealLoop() {
   const vh = window.innerHeight;
